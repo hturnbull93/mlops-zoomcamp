@@ -49,3 +49,6 @@ This creates 4 files in the `output` folder.
 python train.py --data_path ./output
 ```
 
+With `mlflow.autolog()` enabled, this will automatically log parameters, metrics, and artifacts to MLflow.
+
+The `min_samples_split` is 2.
