@@ -52,3 +52,22 @@ python train.py --data_path ./output
 With `mlflow.autolog()` enabled, this will automatically log parameters, metrics, and artifacts to MLflow.
 
 The `min_samples_split` is 2.
+
+## Running MLFlow Tracking Server
+
+You can run the MLflow tracking server with a specific backend store URI and an artifact location. For example:
+
+```bash
+mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./artifacts
+```
+
+## Tuning Hyperparameters with hyperopt
+
+In hpo.py, `mlflow.log_params(params)` is used to capture all parameters used in the optimisation process. These are logged live to the MLflow tracking server.
+
+```bash
+python hpo.py --data_path ./output
+```
+
+The best (lowest) rsme is 5.335419588556921
+
