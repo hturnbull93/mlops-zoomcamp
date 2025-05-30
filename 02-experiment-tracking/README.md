@@ -71,3 +71,12 @@ python hpo.py --data_path ./output
 
 The best (lowest) rsme is 5.335419588556921
 
+## Promoting the best model to the registry
+
+The script in register_model.py runs a set of runs with autolog enabled, and logs the val_rmse and test_rmse metrics. It then can search the MLflow experiment for the best run by the rmse metric, and register that model in the registry.
+
+```bash
+python register_model.py --data_path ./output
+```
+
+The run with the best (lowest) test_rmse is 5.567408012462019
