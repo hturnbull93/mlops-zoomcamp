@@ -5,11 +5,12 @@ import xgboost as xgb
 
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.metrics import root_mean_squared_error
+from sklearn.linear_model import LinearRegression
 
 import mlflow
 
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
-mlflow.set_experiment("nyc-taxi-experiment")
+mlflow.set_experiment("nyc-taxis-experiment")
 
 models_folder = Path('models')
 models_folder.mkdir(exist_ok=True)
@@ -32,12 +33,13 @@ def read_dataframe(year: int, month: int):
     print(f'Number of rows after filtering: {len(df)}')
 
     # Make pairs of PU and DO locations
-    df['PU_DO'] = df['PULocationID'] + '_' + df['DOLocationID']
+    # df['PU_DO'] = df['PULocationID'] + '_' + df['DOLocationID']
 
     return df
 
 def create_X(df: pd.DataFrame, dv=None):
-    categorical = ['PU_DO']
+    # categorical = ['PU_DO']
+    categorical = ['PULocationID', 'DOLocationID']
     numerical = ['trip_distance']
     # Create a dictionary for each row
     dicts = df[categorical + numerical].to_dict(orient='records')
@@ -52,40 +54,63 @@ def create_X(df: pd.DataFrame, dv=None):
     return X, dv
 
 
-def train_model(X_train, y_train, X_valid, y_valid, dv):
+def train_model_linear_regression(X_train, y_train, X_valid, y_valid, dv):
     with mlflow.start_run():
-        train = xgb.DMatrix(X_train, label=y_train)
-        valid = xgb.DMatrix(X_valid, label=y_valid)
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+        print(f'Intercept: {model.intercept_}')
 
-        best_params = {
-            'learning_rate': 0.09585355369315604,
-            'max_depth': 30,
-            'min_child_weight': 1.060597050922164,
-            'objective': 'reg:linear',
-            'reg_alpha': 0.0018060244040060163,
-            'reg_lambda': 0.011658731377413597,
-            'seed': 42,
-        }
-
-        mlflow.log_params(best_params)
-
-        booster = xgb.train(
-            params=best_params,
-            dtrain=train,
-            num_boost_round=30,
-            evals=[(valid, 'validation')],
-            early_stopping_rounds=50,
-        )
-
-        y_pred = booster.predict(valid)
+        y_pred = model.predict(X_valid)
         rmse = root_mean_squared_error(y_valid, y_pred)
         mlflow.log_metric("rmse", rmse)
 
+        # Save the preprocessor
         with open('models/preprocessor.b', 'wb') as f_out:
             pickle.dump(dv, f_out)
         mlflow.log_artifact('models/preprocessor.b', artifact_path='preprocessor')
 
-        mlflow.xgboost.log_model(booster, artifact_path='models_mlflow')
+        # Log the model
+        mlflow.sklearn.log_model(
+            model,
+            artifact_path='models_mlflow',
+            input_example=X_train[0:1],
+        )
+
+
+# def train_model_xgboost(X_train, y_train, X_valid, y_valid, dv):
+#     with mlflow.start_run():
+#         train = xgb.DMatrix(X_train, label=y_train)
+#         valid = xgb.DMatrix(X_valid, label=y_valid)
+
+#         best_params = {
+#             'learning_rate': 0.09585355369315604,
+#             'max_depth': 30,
+#             'min_child_weight': 1.060597050922164,
+#             'objective': 'reg:linear',
+#             'reg_alpha': 0.0018060244040060163,
+#             'reg_lambda': 0.011658731377413597,
+#             'seed': 42,
+#         }
+
+#         mlflow.log_params(best_params)
+
+#         booster = xgb.train(
+#             params=best_params,
+#             dtrain=train,
+#             num_boost_round=30,
+#             evals=[(valid, 'validation')],
+#             early_stopping_rounds=50,
+#         )
+
+#         y_pred = booster.predict(valid)
+#         rmse = root_mean_squared_error(y_valid, y_pred)
+#         mlflow.log_metric("rmse", rmse)
+
+#         with open('models/preprocessor.b', 'wb') as f_out:
+#             pickle.dump(dv, f_out)
+#         mlflow.log_artifact('models/preprocessor.b', artifact_path='preprocessor')
+
+#         mlflow.xgboost.log_model(booster, artifact_path='models_mlflow')
 
 def run(year, month):
     df_train = read_dataframe(year, month)
@@ -106,7 +131,7 @@ def run(year, month):
     y_train = df_train[target].values
     y_val = df_val[target].values
 
-    train_model(X_train, y_train, X_val, y_val, dv)
+    train_model_linear_regression(X_train, y_train, X_val, y_val, dv)
 
 
 if __name__ == "__main__":

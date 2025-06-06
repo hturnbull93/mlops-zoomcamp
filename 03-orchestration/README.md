@@ -71,3 +71,6 @@ The number of rows in the March 2023 dataset is 3403766.
 
 After filtering the trips of less than 1 minute and more than 60 minutes, the number of rows is 3316216.
 
+The intercept of the linear regression is 23.848428331734578.
+
+The model model_size_bytes is 10340
