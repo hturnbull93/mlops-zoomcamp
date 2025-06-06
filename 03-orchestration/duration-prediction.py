@@ -17,6 +17,8 @@ models_folder.mkdir(exist_ok=True)
 def read_dataframe(year: int, month: int):
     df = pd.read_parquet(f'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{year}-{month:02d}.parquet')
 
+    print(f'Number of rows in the dataframe: {len(df)}')
+
     # Calculate the difference between pickup and dropoff times
     df['duration'] = df.tpep_dropoff_datetime - df.tpep_pickup_datetime
     # Convert duration to minutes
@@ -26,6 +28,8 @@ def read_dataframe(year: int, month: int):
     # set the categories
     categorical = ['PULocationID', 'DOLocationID']
     df[categorical] = df[categorical].astype(str)
+
+    print(f'Number of rows after filtering: {len(df)}')
 
     # Make pairs of PU and DO locations
     df['PU_DO'] = df['PULocationID'] + '_' + df['DOLocationID']

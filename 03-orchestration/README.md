@@ -55,6 +55,8 @@ brew install libomp
 
 # Run the MLflow Tracking Server
 
+MLflow version is 2.22.0
+
 ```bash
 mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./artifacts
 ```
@@ -64,3 +66,8 @@ mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./
 ```bash
 python duration-prediction.py --year=2023 --month=3
 ```
+
+The number of rows in the March 2023 dataset is 3403766.
+
+After filtering the trips of less than 1 minute and more than 60 minutes, the number of rows is 3316216.
+
